@@ -276,6 +276,16 @@ display: none;
             outline-offset: 2px !important;
         }
 
+        /* 모바일처럼 화면이 좁을 때 힌트 팝업의 여백·글자 크기를 줄여서
+           문장이 너무 잘게 줄바꿈되지 않도록 함.
+           How to Play 팝업은 breakpoint 하나에 의존하지 않고 clamp()로 화면 폭에
+           비례해 연속적으로 크기가 줄어들도록 인라인 스타일에서 처리한다. */
+        @media (max-width: 480px) {
+            #hint-popup-text { font-size: 17px !important; }
+            #hint-card > div { padding: 16px !important; }
+            #hint-popup-img-wrap { height: 220px !important; }
+        }
+
         .start-btn-gradient {
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #a1c4fd 100%);
             border: 3px solid #ffffff;
@@ -299,19 +309,19 @@ display: none;
 <!-- [상단 네비게이션 - 전체 게임 공통, 위치 고정] 왼쪽: 홈/뒤로/앞으로, 오른쪽: How to Play/효과음/배경음/전체화면.
      이어진 하나의 바가 아니라 아이콘마다 따로 떠 있는 원형 버튼. title 속성으로 마우스오버 시 텍스트가 뜨도록 함 -->
 <div id="top-nav-bar" style="display:contents;">
-  <div style="position:fixed;top:18px;left:18px;z-index:9999;display:flex;gap:10px;">
-    <button type="button" id="nav-home-btn" onclick="navHome()" class="glass-pill" title="처음으로" style="width:52px;height:52px;border-radius:9999px;border:2px solid rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:#3b3a66;">
+  <div id="nav-left-group" style="position:fixed;top:18px;left:18px;z-index:9999;display:flex;gap:10px;transform-origin:top left;">
+    <button type="button" id="nav-home-btn" onclick="navHome()" class="glass-pill" title="처음으로" style="width:52px;height:52px;border-radius:9999px;border:2px solid rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:#3b3a66;flex-shrink:0;">
       <i class="fa-solid fa-house"></i>
     </button>
-    <button type="button" id="nav-back-btn" onclick="navBack()" class="glass-pill" title="뒤로" style="width:52px;height:52px;border-radius:9999px;border:2px solid rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:#3b3a66;">
+    <button type="button" id="nav-back-btn" onclick="navBack()" class="glass-pill" title="뒤로" style="width:52px;height:52px;border-radius:9999px;border:2px solid rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:#3b3a66;flex-shrink:0;">
       <i class="fa-solid fa-play" style="transform:scaleX(-1);"></i>
     </button>
-    <button type="button" id="nav-forward-btn" onclick="navForward()" class="glass-pill" title="앞으로" style="width:52px;height:52px;border-radius:9999px;border:2px solid rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:#3b3a66;">
+    <button type="button" id="nav-forward-btn" onclick="navForward()" class="glass-pill" title="앞으로" style="width:52px;height:52px;border-radius:9999px;border:2px solid rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:#3b3a66;flex-shrink:0;">
       <i class="fa-solid fa-play"></i>
     </button>
   </div>
 
-  <div style="position:fixed;top:18px;right:18px;z-index:9999;display:flex;gap:10px;">
+  <div id="nav-right-group" style="position:fixed;top:18px;right:18px;z-index:9999;display:flex;gap:10px;transform-origin:top right;">
     <button type="button" id="nav-htp-btn" onclick="openHowToPlay()" class="glass-pill" title="How to Play" style="width:52px;height:52px;border-radius:9999px;border:2px solid rgba(255,255,255,0.85);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:#3b3a66;">
       <i class="fa-regular fa-circle-question"></i>
     </button>
@@ -329,36 +339,36 @@ display: none;
 
 <!-- [여기서부터 팝업 창 추가] -->
 <div id="how-to-play-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-6" style="background:rgba(24,24,48,0.55);" onclick="closeHowToPlay()">
-    <div id="how-to-play-card" class="relative" style="width:860px;max-width:100%;background:#ffffff;border:4px solid #181830;border-radius:24px;padding:38px 44px;display:flex;flex-direction:column;gap:22px;box-sizing:border-box;" onclick="event.stopPropagation()">
+    <div id="how-to-play-card" class="relative" style="width:860px;max-width:100%;max-height:88vh;overflow-y:auto;background:#ffffff;border:4px solid #181830;border-radius:24px;padding:clamp(18px,6vw,38px) clamp(16px,7vw,44px);display:flex;flex-direction:column;gap:clamp(12px,3vw,22px);box-sizing:border-box;" onclick="event.stopPropagation()">
         <div style="display:flex;align-items:center;justify-content:space-between;">
-            <h2 style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:30px;color:#3b3a66;margin:0;">How to Play</h2>
-            <button onclick="closeHowToPlay()" style="all:unset;cursor:pointer;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:26px;color:#3b3a66;">×</button>
+            <h2 style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(20px,6vw,30px);color:#3b3a66;margin:0;">How to Play</h2>
+            <button onclick="closeHowToPlay()" style="all:unset;cursor:pointer;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(20px,5vw,26px);color:#3b3a66;">×</button>
         </div>
-        <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:21px;color:#3b3a66;margin:0;line-height:1.5;">학습 목표: 그림, 뜻, 소리를 보고 알맞은 영어 단어를 찾아보세요!</p>
-        <div style="background:#f5f3fb;border:3px solid #dbd1e9;border-radius:16px;padding:22px 26px;display:flex;flex-direction:column;gap:10px;">
-            <p style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:20px;color:#3b3a66;margin:0;">진행 방법</p>
-            <p style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:19px;color:#5c5a85;margin:0 0 6px;line-height:1.6;">
+        <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(15px,4vw,21px);color:#3b3a66;margin:0;line-height:1.5;">학습 목표: 그림, 뜻, 소리를 보고 알맞은 영어 단어를 찾아보세요!</p>
+        <div style="background:#f5f3fb;border:3px solid #dbd1e9;border-radius:16px;padding:clamp(14px,4vw,22px) clamp(14px,4vw,26px);display:flex;flex-direction:column;gap:clamp(6px,2vw,10px);">
+            <p style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(16px,3.5vw,20px);color:#3b3a66;margin:0;">진행 방법</p>
+            <p style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:clamp(14px,3.3vw,19px);color:#5c5a85;margin:0 0 6px;line-height:1.6;">
                 <span class="wrap-indent" style="display:block;">문제를 잘 보고 보기 중에서 정답을 골라요.</span>
                 <span class="wrap-indent" style="display:block;">틀려도 괜찮아요! 한 문제에 최대 5번까지 도전할 수 있어요. (O/X 문제는 1번)</span>
             </p>
-            <p style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:20px;color:#3b3a66;margin:0;">점수 받는 법</p>
-            <p style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:19px;color:#5c5a85;margin:0 0 6px;line-height:1.6;">
+            <p style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(16px,3.5vw,20px);color:#3b3a66;margin:0;">점수 받는 법</p>
+            <p style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:clamp(14px,3.3vw,19px);color:#5c5a85;margin:0 0 6px;line-height:1.6;">
                 <span class="wrap-indent" style="display:block;">한 번에 맞힐수록 점수가 높아요. (첫 번째에 맞히면 10점!)</span>
                 <span class="wrap-indent" style="display:block;">문제를 연달아 맞히면 연속 보너스 +3점도 받아요!</span>
             </p>
-            <p style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:20px;color:#3b3a66;margin:0;">힌트</p>
-            <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:19px;color:#5c5a85;margin:0;line-height:1.6;">문제당 1번, 감점 없이 힌트를 볼 수 있어요.</p>
+            <p style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(16px,3.5vw,20px);color:#3b3a66;margin:0;">힌트</p>
+            <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:clamp(14px,3.3vw,19px);color:#5c5a85;margin:0;line-height:1.6;">문제당 1번, 감점 없이 힌트를 볼 수 있어요.</p>
         </div>
-        <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:19px;color:#3b3a66;margin:0;line-height:1.6;">10문제를 모두 풀면 최종 점수가 나와요!</p>
+        <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(14px,3.3vw,19px);color:#3b3a66;margin:0;line-height:1.6;">10문제를 모두 풀면 최종 점수가 나와요!</p>
         <div id="htp-button-row" style="display:flex;gap:12px;">
-            <button id="htp-close-btn" onclick="closeHowToPlay()" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:21px;color:#3b3a66;background:#ffdd8a;border:3px solid #181830;border-radius:16px;padding:14px 0;cursor:pointer;flex:1;">닫기</button>
-            <button id="htp-gamestart-btn" onclick="startGameFromHowToPlay()" style="display:none;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:21px;color:#7a3300;background:linear-gradient(180deg,#ffb15e 0%,#ff8a3d 100%);border:3px solid #181830;border-radius:16px;padding:14px 0;cursor:pointer;flex:1;">Game Start</button>
+            <button id="htp-close-btn" onclick="closeHowToPlay()" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(16px,4vw,21px);color:#3b3a66;background:#ffdd8a;border:3px solid #181830;border-radius:16px;padding:clamp(10px,3vw,14px) 0;cursor:pointer;flex:1;">닫기</button>
+            <button id="htp-gamestart-btn" onclick="startGameFromHowToPlay()" style="display:none;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(16px,4vw,21px);color:#7a3300;background:linear-gradient(180deg,#ffb15e 0%,#ff8a3d 100%);border:3px solid #181830;border-radius:16px;padding:clamp(10px,3vw,14px) 0;cursor:pointer;flex:1;">Game Start</button>
         </div>
     </div>
 </div>
 
 <div id="hint-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-6" style="background:rgba(24,24,48,0.55);" onclick="closeHintPopup()">
-    <div id="hint-card" class="relative" style="width:480px;max-width:100%;background:#ffffff;border:4px solid #181830;border-radius:24px;overflow:hidden;box-shadow:0 12px 0 rgba(24,24,48,0.15);box-sizing:border-box;" onclick="event.stopPropagation()">
+    <div id="hint-card" class="relative" style="width:480px;max-width:100%;max-height:88vh;overflow-x:hidden;overflow-y:auto;background:#ffffff;border:4px solid #181830;border-radius:24px;box-shadow:0 12px 0 rgba(24,24,48,0.15);box-sizing:border-box;" onclick="event.stopPropagation()">
         <div style="background:#dbd1e9;border-bottom:4px solid #181830;padding:18px 26px;display:flex;align-items:center;justify-content:space-between;">
             <h2 style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:24px;color:#3b3a66;margin:0;"> Hint</h2>
             <button onclick="closeHintPopup()" style="all:unset;cursor:pointer;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:22px;color:#3b3a66;">×</button>
@@ -2293,6 +2303,14 @@ function resizeGame() {
   const winH = window.innerHeight;
   const availH = winH - NAV_BAR_RESERVED;
 
+  // 모바일처럼 창이 좁으면 상단 좌/우 버튼 그룹이 화면 가운데서 서로 겹치므로,
+  // 폭이 충분할 때(520px 이상)는 100%, 좁아질수록 최대 35%까지 함께 줄어들도록 축소한다.
+  const navScale = Math.max(0.65, Math.min(1, winW / 520));
+  const navLeft = document.getElementById('nav-left-group');
+  const navRight = document.getElementById('nav-right-group');
+  if (navLeft) navLeft.style.transform = `scale(${navScale})`;
+  if (navRight) navRight.style.transform = `scale(${navScale})`;
+
   // 위 CSS에서 설정한 #game-wrapper의 너비/높이와 똑같이 입력
   const designW = 1300;
   const designH = 800;
@@ -2332,17 +2350,9 @@ function resizeGame() {
     subcategoryWrapper.style.transform = `scale(${subcategoryScale})`;
   }
 
-  // How to Play 팝업도 게임 화면(game-wrapper)과 같은 배율로 축소/확대되어
-  // Mission Complete 팝업처럼 화면(액자) 안에 들어있는 것처럼 보이게 함
-  const htpCard = document.getElementById("how-to-play-card");
-  if (htpCard) {
-    htpCard.style.transform = `scale(${scale})`;
-  }
-
-  const hintCard = document.getElementById("hint-card");
-  if (hintCard) {
-    hintCard.style.transform = `scale(${scale})`;
-  }
+  // How to Play/힌트 팝업은 게임 화면 배율(scale)을 따라가지 않는다. 모바일처럼 화면이 아주
+  // 좁을 때 배율과 반응형 max-width가 이중으로 겹쳐 팝업이 지나치게 작아지고 글자가 억지로
+  // 줄바꿈되는 문제가 있었다. 대신 CSS max-width/max-height만으로 자체적으로 반응형 크기를 잡는다.
 }
 
 // 창 크기가 변경될 때, 로드될 때 즉시 실행
