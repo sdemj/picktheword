@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pick the Word</title>
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS: 외부망이 막힌 환경(학교망 등)에서도 깨지지 않도록 실제 사용하는
+         클래스만 미리 빌드해 로컬에 내장(vendor/tailwind.min.css). 클래스를 새로 추가했다면
+         Tailwind CLI로 다시 빌드해야 반영된다. -->
+    <link rel="stylesheet" href="vendor/tailwind.min.css">
+
+    <!-- FontAwesome Icons: 위와 같은 이유로 로컬에 내장(vendor/fontawesome) -->
+    <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
     
     <style>
         /* 전체 게임 통일 폰트: 케리스(KERIS) 케듀체 - 학교 안심폰트, OFL 라이선스.
@@ -301,8 +303,8 @@ display: none;
 <body class="flex flex-col items-center justify-center min-h-screen text-slate-800">
 
 <!-- [배경음악] 인트로/주제선택/난이도선택용, 실제 게임화면용 두 트랙 -->
-<audio id="bgm-intro" src="fluxsound-cheerful-upbeat-kids-486631.mp3" loop preload="auto"></audio>
-<audio id="bgm-game" src="dreamy_rabbit-8-bit-game-music-122259.mp3" loop preload="auto"></audio>
+<audio id="bgm-intro" src="fluxsound-cheerful-upbeat-kids-486631.mp3" loop preload="none"></audio>
+<audio id="bgm-game" src="dreamy_rabbit-8-bit-game-music-122259.mp3" loop preload="none"></audio>
 
 <!-- [상단 네비게이션 - 전체 게임 공통, 위치 고정] 왼쪽: 홈/뒤로/앞으로, 오른쪽: How to Play/효과음/배경음/전체화면.
      이어진 하나의 바가 아니라 아이콘마다 따로 떠 있는 원형 버튼. title 속성으로 마우스오버 시 텍스트가 뜨도록 함 -->
@@ -1277,6 +1279,10 @@ let selectedDifficulty = '중';
 let isAnswerLocked = false;
 let hintUsed = false; // [추가] 현재 문제에서 힌트를 이미 사용했는지 여부
 let pendingAdvanceTimeout = null; // 정답 직후 다음 문제로 자동 이동하는 예약(화면 이탈 시 취소용)
+// 정답/오답 팝업이 2초 뒤 사라지는 예약들(화면 이탈 시 취소용). 한 문제에서 오답을 여러 번
+// 낼 수 있어 팝업이 짧은 시간에 여러 개 겹쳐 뜰 수 있으므로, 변수 하나가 아니라 배열로
+// 전부 추적해야 이전 것들이 취소되지 않고 남는 일이 없다.
+let feedbackPopupFadeTimeouts = [];
 
 /* ================= 점수 체계: 시도 횟수 기반 ================= */
 let currentAttempts = 0; // 현재 문제에서 오답을 고른 횟수 (0부터 시작)
@@ -2139,6 +2145,8 @@ function revealCorrectChoice(correctVal) {
 // 화면을 나갈 때(처음으로/뒤로) 아직 닫히지 않은 정답/오답 피드백 팝업이 다음 게임 화면까지
 // 남아있지 않도록 정리한다.
 function clearStrayFeedbackPopups() {
+    feedbackPopupFadeTimeouts.forEach(id => clearTimeout(id));
+    feedbackPopupFadeTimeouts = [];
     document.querySelectorAll('#game-wrapper .gg-feedback-popup').forEach(el => el.remove());
 }
 
@@ -2216,10 +2224,12 @@ function showFeedbackPopup(isCorrect, correctWord, streakBonus) {
 
     wrapper.appendChild(popup); // document.body 대신 wrapper에 추가
 
-    setTimeout(() => {
+    const fadeTimeout = setTimeout(() => {
         popup.style.opacity = '0';
-        setTimeout(() => popup.remove(), 300);
+        const removeTimeout = setTimeout(() => popup.remove(), 300);
+        feedbackPopupFadeTimeouts.push(removeTimeout);
     }, 2000);
+    feedbackPopupFadeTimeouts.push(fadeTimeout);
 }
 
 function resetGameState() {
