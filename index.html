@@ -82,10 +82,12 @@ body {
             bottom: 30px;
             left: -20px;
         }
-#game-wrapper {
-  /* 실제 화면 구성 요소가 다 들어가는 기준 해상도 */
+/* 인트로/카테고리/소분류/난이도/게임 화면과 팝업(how-to-play, hint)을 전부 담는 하나의
+   기준 캔버스. 이 요소 하나에만 중앙정렬과 배율(scale)을 적용하고, 안에 있는 화면·팝업은
+   전부 이 캔버스에 꽉 채워지는 자식이 되어 배율을 자동으로 물려받는다. */
+#app-stage {
   width: 1300px;
-  height: 800px; /* 카드 실제 내용 높이에 맞춰 축소 - 화면을 꽉 채우도록 */
+  height: 800px;
 
   position: fixed;
   top: calc(50% + 15px); /* 상단 모서리의 개별 원형 버튼과 겹치지 않도록 중앙보다 살짝 아래로 */
@@ -94,12 +96,27 @@ body {
   transform-origin: center center; /* 중앙 기준 축소/확대 */
 
   box-sizing: border-box;
+}
+#game-wrapper {
+  /* 크기·중앙정렬·배율은 이제 #app-stage가 담당 - 여기서는 캔버스에 꽉 채우기만 한다 */
+  position: absolute;
+  inset: 0;
+
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: space-between; /* 상단-중앙-하단이 비율에 맞춰 배치됨 */
   align-items: center;
   padding: 20px;
   overflow-y: auto; /* 문제 수/보기 수가 많아 세로로 넘칠 때 잘리지 않고 스크롤되도록 */
+}
+/* id 선택자(#game-wrapper)가 class 선택자(.hidden)보다 우선순위가 높아서, 위 규칙의
+   display:flex가 .hidden{display:none}을 항상 이겨버린다. 예전엔 화면마다 z-index:50을
+   따로 줘서 안 보이게 가려졌을 뿐 실제로는 숨겨진 게 아니었는데, 화면들을 #app-stage
+   하나로 합치면서 그 z-index를 없애자 이 문제가 그대로 드러났다(인트로 화면 위에 게임
+   화면이 겹쳐서 클릭을 가로채는 버그). class를 id보다 더 구체적으로 만들어 확실히 이기게 한다. */
+#game-wrapper.hidden {
+  display: none;
 }
         .bg-sparkle {
             position: absolute;
@@ -278,14 +295,6 @@ display: none;
             outline-offset: 2px !important;
         }
 
-        /* Hint/How to Play 팝업은 breakpoint 하나에 의존하지 않고 clamp()로 화면 폭·높이에
-           비례해 연속적으로 크기가 줄어들도록 인라인 스타일에서 처리한다(카드 자체 스타일 참고).
-           세로 공간이 아주 좁은 기기(가로모드 등)에서는 이미지 힌트 박스를 한 번 더 줄인다. */
-        @media (max-height: 520px) {
-            #hint-popup-img-wrap { height: clamp(90px, 24vh, 180px) !important; }
-            #how-to-play-card, #hint-card { max-height: 92vh !important; max-height: 92dvh !important; }
-        }
-
         .start-btn-gradient {
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #a1c4fd 100%);
             border: 3px solid #ffffff;
@@ -337,56 +346,62 @@ display: none;
   </div>
 </div>
 
+<!-- 화면 5개(인트로/카테고리/소분류/난이도/게임)와 팝업 2개(how-to-play/hint)를 전부
+     하나의 #app-stage 캔버스 안에 넣는다. 이러면 팝업의 position:fixed가 브라우저
+     화면 전체가 아니라 #app-stage 기준으로 동작하고(캔버스에 걸린 transform이 새
+     containing block이 됨), 배율도 캔버스 전체와 항상 똑같이 맞춰진다. -->
+<div id="app-stage">
+
 <!-- [여기서부터 팝업 창 추가] -->
-<div id="how-to-play-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-6" style="background:rgba(24,24,48,0.55);" onclick="closeHowToPlay()">
-    <div id="how-to-play-card" class="relative" style="width:860px;max-width:100%;max-height:88vh;max-height:88dvh;overflow-y:auto;background:#ffffff;border:4px solid #181830;border-radius:24px;padding:clamp(18px,6vw,38px) clamp(16px,7vw,44px);display:flex;flex-direction:column;gap:clamp(12px,3vw,22px);box-sizing:border-box;" onclick="event.stopPropagation()">
+<div id="how-to-play-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-6" onclick="closeHowToPlay()">
+    <div id="how-to-play-card" class="relative" style="width:860px;background:#ffffff;border:4px solid #181830;border-radius:24px;padding:38px 44px;display:flex;flex-direction:column;gap:22px;box-sizing:border-box;" onclick="event.stopPropagation()">
         <div style="display:flex;align-items:center;justify-content:space-between;">
-            <h2 style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(20px,6vw,30px);color:#3b3a66;margin:0;">How to Play</h2>
-            <button onclick="closeHowToPlay()" style="all:unset;cursor:pointer;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(20px,5vw,26px);color:#3b3a66;">×</button>
+            <h2 style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:30px;color:#3b3a66;margin:0;">How to Play</h2>
+            <button onclick="closeHowToPlay()" style="all:unset;cursor:pointer;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:26px;color:#3b3a66;">×</button>
         </div>
-        <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(15px,4vw,21px);color:#3b3a66;margin:0;line-height:1.5;">학습 목표: 그림, 뜻, 소리를 보고 알맞은 영어 단어를 찾아보세요!</p>
-        <div style="background:#f5f3fb;border:3px solid #dbd1e9;border-radius:16px;padding:clamp(14px,4vw,22px) clamp(14px,4vw,26px);display:flex;flex-direction:column;gap:clamp(6px,2vw,10px);">
-            <p style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(16px,3.5vw,20px);color:#3b3a66;margin:0;">진행 방법</p>
-            <p style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:clamp(14px,3.3vw,19px);color:#5c5a85;margin:0 0 6px;line-height:1.6;">
+        <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:21px;color:#3b3a66;margin:0;line-height:1.5;">학습 목표: 그림, 뜻, 소리를 보고 알맞은 영어 단어를 찾아보세요!</p>
+        <div style="background:#f5f3fb;border:3px solid #dbd1e9;border-radius:16px;padding:22px 26px;display:flex;flex-direction:column;gap:10px;">
+            <p style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:20px;color:#3b3a66;margin:0;">진행 방법</p>
+            <p style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:19px;color:#5c5a85;margin:0 0 6px;line-height:1.6;">
                 <span class="wrap-indent" style="display:block;">문제를 잘 보고 보기 중에서 정답을 골라요.</span>
                 <span class="wrap-indent" style="display:block;">틀려도 괜찮아요! 한 문제에 최대 5번까지 도전할 수 있어요. (O/X 문제는 1번)</span>
             </p>
-            <p style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(16px,3.5vw,20px);color:#3b3a66;margin:0;">점수 받는 법</p>
-            <p style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:clamp(14px,3.3vw,19px);color:#5c5a85;margin:0 0 6px;line-height:1.6;">
+            <p style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:20px;color:#3b3a66;margin:0;">점수 받는 법</p>
+            <p style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:19px;color:#5c5a85;margin:0 0 6px;line-height:1.6;">
                 <span class="wrap-indent" style="display:block;">한 번에 맞힐수록 점수가 높아요. (첫 번째에 맞히면 10점!)</span>
                 <span class="wrap-indent" style="display:block;">문제를 연달아 맞히면 연속 보너스 +3점도 받아요!</span>
             </p>
-            <p style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(16px,3.5vw,20px);color:#3b3a66;margin:0;">힌트</p>
-            <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:clamp(14px,3.3vw,19px);color:#5c5a85;margin:0;line-height:1.6;">문제당 1번, 감점 없이 힌트를 볼 수 있어요.</p>
+            <p style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:20px;color:#3b3a66;margin:0;">힌트</p>
+            <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:19px;color:#5c5a85;margin:0;line-height:1.6;">문제당 1번, 감점 없이 힌트를 볼 수 있어요.</p>
         </div>
-        <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(14px,3.3vw,19px);color:#3b3a66;margin:0;line-height:1.6;">10문제를 모두 풀면 최종 점수가 나와요!</p>
+        <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:19px;color:#3b3a66;margin:0;line-height:1.6;">10문제를 모두 풀면 최종 점수가 나와요!</p>
         <div id="htp-button-row" style="display:flex;gap:12px;">
-            <button id="htp-close-btn" onclick="closeHowToPlay()" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(16px,4vw,21px);color:#3b3a66;background:#ffdd8a;border:3px solid #181830;border-radius:16px;padding:clamp(10px,3vw,14px) 0;cursor:pointer;flex:1;">닫기</button>
-            <button id="htp-gamestart-btn" onclick="startGameFromHowToPlay()" style="display:none;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(16px,4vw,21px);color:#7a3300;background:linear-gradient(180deg,#ffb15e 0%,#ff8a3d 100%);border:3px solid #181830;border-radius:16px;padding:clamp(10px,3vw,14px) 0;cursor:pointer;flex:1;">Game Start</button>
+            <button id="htp-close-btn" onclick="closeHowToPlay()" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:21px;color:#3b3a66;background:#ffdd8a;border:3px solid #181830;border-radius:16px;padding:14px 0;cursor:pointer;flex:1;">닫기</button>
+            <button id="htp-gamestart-btn" onclick="startGameFromHowToPlay()" style="display:none;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:21px;color:#7a3300;background:linear-gradient(180deg,#ffb15e 0%,#ff8a3d 100%);border:3px solid #181830;border-radius:16px;padding:14px 0;cursor:pointer;flex:1;">Game Start</button>
         </div>
     </div>
 </div>
 
-<div id="hint-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-6" style="background:rgba(24,24,48,0.55);" onclick="closeHintPopup()">
-    <div id="hint-card" class="relative" style="width:480px;max-width:100%;max-height:88vh;max-height:88dvh;overflow-x:hidden;overflow-y:auto;background:#ffffff;border:4px solid #181830;border-radius:24px;box-shadow:0 12px 0 rgba(24,24,48,0.15);box-sizing:border-box;" onclick="event.stopPropagation()">
-        <div style="background:#dbd1e9;border-bottom:4px solid #181830;padding:clamp(10px,4vw,18px) clamp(14px,5vw,26px);display:flex;align-items:center;justify-content:space-between;">
-            <h2 style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(18px,5.5vw,24px);color:#3b3a66;margin:0;"> Hint</h2>
-            <button onclick="closeHintPopup()" style="all:unset;cursor:pointer;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(18px,5vw,22px);color:#3b3a66;">×</button>
+<div id="hint-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-6" onclick="closeHintPopup()">
+    <div id="hint-card" class="relative" style="width:480px;background:#ffffff;border:4px solid #181830;border-radius:24px;box-shadow:0 12px 0 rgba(24,24,48,0.15);box-sizing:border-box;" onclick="event.stopPropagation()">
+        <div style="background:#dbd1e9;border-bottom:4px solid #181830;padding:18px 26px;display:flex;align-items:center;justify-content:space-between;">
+            <h2 style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:24px;color:#3b3a66;margin:0;"> Hint</h2>
+            <button onclick="closeHintPopup()" style="all:unset;cursor:pointer;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:22px;color:#3b3a66;">×</button>
         </div>
-        <div style="padding:clamp(14px,5vw,28px) clamp(14px,5vw,30px);display:flex;flex-direction:column;gap:clamp(10px,3vw,18px);">
-            <div id="hint-popup-img-wrap" style="width:100%;height:clamp(140px,32vh,320px);box-sizing:border-box;border:4px solid #181830;border-radius:18px;background:linear-gradient(145deg,#fffef9 0%,#fff2cc 100%);display:none;align-items:center;justify-content:center;overflow:hidden;padding:clamp(10px,3vw,20px);">
+        <div style="padding:28px 30px;display:flex;flex-direction:column;gap:18px;">
+            <div id="hint-popup-img-wrap" style="width:100%;height:320px;box-sizing:border-box;border:4px solid #181830;border-radius:18px;background:linear-gradient(145deg,#fffef9 0%,#fff2cc 100%);display:none;align-items:center;justify-content:center;overflow:hidden;padding:20px;">
                 <img id="hint-popup-img" src="" alt="힌트 그림" style="max-width:92%;max-height:92%;width:auto;height:auto;object-fit:contain;">
                 <span id="hint-popup-emoji" class="hidden" style="font-size:6.5rem;line-height:1;"></span>
             </div>
-            <div style="background:#fff8dc;border:4px solid #181830;border-radius:18px;padding:clamp(12px,4vw,26px) clamp(14px,4vw,28px);">
-                <p id="hint-popup-text" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:clamp(15px,4vw,23px);color:#3b3a66;line-height:1.6;margin:0;text-align:center;"></p>
+            <div style="background:#fff8dc;border:4px solid #181830;border-radius:18px;padding:26px 28px;">
+                <p id="hint-popup-text" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:23px;color:#3b3a66;line-height:1.6;margin:0;text-align:center;"></p>
             </div>
         </div>
     </div>
 </div>
 
-<div id="intro-screen" class="flex items-center justify-center" style="width:100vw;height:100vh;overflow:hidden;background:#bcd4f0;position:fixed;inset:0;z-index:50;box-sizing:border-box;padding-top:30px;">
-  <div id="intro-wrapper" style="width:1024px;height:576px;position:relative;overflow:hidden;font-family:'KERISKEDU',sans-serif;background:#bcd4f0;flex-shrink:0;">
+<div id="intro-screen" class="flex items-center justify-center" style="width:100%;height:100%;overflow:hidden;background:#bcd4f0;position:absolute;inset:0;box-sizing:border-box;">
+  <div id="intro-wrapper" style="width:100%;height:100%;position:relative;overflow:hidden;font-family:'KERISKEDU',sans-serif;background:#bcd4f0;flex-shrink:0;">
     <img src="introbg.png" alt="Pick the Word game art" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
 
     <div style="position:absolute;left:0;right:0;bottom:0px;display:flex;flex-direction:column;align-items:center;gap:16px;padding:0 40px 20px;">
@@ -399,8 +414,8 @@ display: none;
   </div>
 </div>
 
-<div id="category-screen" class="hidden flex items-center justify-center" style="width:100vw;height:100vh;overflow:hidden;background:#bcdaed;position:fixed;inset:0;z-index:50;box-sizing:border-box;padding-top:30px;">
-  <div id="category-wrapper" style="width:1200px;height:900px;position:relative;box-sizing:border-box;font-family:'KERISKEDU',sans-serif;overflow:hidden;flex-shrink:0;background:#bcdaed;">
+<div id="category-screen" class="hidden flex items-center justify-center" style="width:100%;height:100%;overflow:hidden;background:#bcdaed;position:absolute;inset:0;box-sizing:border-box;">
+  <div id="category-wrapper" style="width:100%;height:100%;position:relative;box-sizing:border-box;font-family:'KERISKEDU',sans-serif;overflow:hidden;flex-shrink:0;background:#bcdaed;">
 
     <div style="position:absolute;width:220px;height:220px;border-radius:9999px;background:rgba(255,255,255,0.4);filter:blur(14px);opacity:0.55;top:-50px;right:-30px;"></div>
     <div style="position:absolute;width:170px;height:170px;border-radius:9999px;background:rgba(180,225,250,0.5);filter:blur(14px);opacity:0.5;bottom:10px;left:-30px;"></div>
@@ -427,8 +442,8 @@ display: none;
   </div>
 </div>
 
-<div id="subcategory-screen" class="hidden flex items-center justify-center" style="width:100vw;height:100vh;overflow:hidden;background:#bcdaed;position:fixed;inset:0;z-index:50;box-sizing:border-box;padding-top:30px;">
-  <div id="subcategory-wrapper" style="width:1200px;height:900px;position:relative;box-sizing:border-box;font-family:'KERISKEDU',sans-serif;overflow:hidden;flex-shrink:0;background:#bcdaed;">
+<div id="subcategory-screen" class="hidden flex items-center justify-center" style="width:100%;height:100%;overflow:hidden;background:#bcdaed;position:absolute;inset:0;box-sizing:border-box;">
+  <div id="subcategory-wrapper" style="width:100%;height:100%;position:relative;box-sizing:border-box;font-family:'KERISKEDU',sans-serif;overflow:hidden;flex-shrink:0;background:#bcdaed;">
 
     <div style="position:absolute;width:220px;height:220px;border-radius:9999px;background:rgba(255,255,255,0.4);filter:blur(14px);opacity:0.55;top:-50px;right:-30px;"></div>
     <div style="position:absolute;width:170px;height:170px;border-radius:9999px;background:rgba(180,225,250,0.5);filter:blur(14px);opacity:0.5;bottom:10px;left:-30px;"></div>
@@ -466,8 +481,8 @@ display: none;
   </div>
 </div>
 
-<div id="difficulty-screen" class="hidden flex items-center justify-center" style="width:100vw;height:100vh;overflow:hidden;background:#bcdaed;position:fixed;inset:0;z-index:50;box-sizing:border-box;padding-top:30px;">
-<div id="difficulty-wrapper" style="width:1200px;height:900px;position:relative;box-sizing:border-box;font-family:'KERISKEDU',sans-serif;overflow:hidden;flex-shrink:0;background:#bcdaed;">
+<div id="difficulty-screen" class="hidden flex items-center justify-center" style="width:100%;height:100%;overflow:hidden;background:#bcdaed;position:absolute;inset:0;box-sizing:border-box;">
+<div id="difficulty-wrapper" style="width:100%;height:100%;position:relative;box-sizing:border-box;font-family:'KERISKEDU',sans-serif;overflow:hidden;flex-shrink:0;background:#bcdaed;">
 
   <!-- ambient decor -->
   <div style="position:absolute;width:220px;height:220px;border-radius:9999px;background:rgba(255,255,255,0.4);filter:blur(14px);opacity:0.55;top:-50px;right:-30px;"></div>
@@ -591,6 +606,7 @@ display: none;
     </div>
 </div>
 </div>
+</div> <!-- /#app-stage -->
 
     </div>
     <script>
@@ -1577,6 +1593,7 @@ function startSelectedGame() {
 // 게임 중 '뒤로': 진행 중인 예약된 자동 넘김/모달을 정리하고 난이도 선택 화면으로 이동
 function exitGameToDifficulty() {
     if (pendingAdvanceTimeout) { clearTimeout(pendingAdvanceTimeout); pendingAdvanceTimeout = null; }
+    stopWordAudio();
     clearStrayFeedbackPopups();
     document.getElementById('result-modal')?.classList.add('hidden');
     document.getElementById('hint-modal')?.classList.add('hidden');
@@ -1598,13 +1615,25 @@ function getCurrentScreenId() {
     return 'intro-screen';
 }
 
+// 뒤로/앞으로/홈 중 무엇을 누르든, 떠 있던 팝업(힌트/How to Play/결과/기회소진)은
+// 화면 전환과 상관없이 일단 다 닫는다 — 팝업이 다른 화면 위에 그대로 떠 있는 채로
+// 남는 일이 없도록 하기 위함.
+function closeAllPopups() {
+    clearStrayFeedbackPopups();
+    document.getElementById('hint-modal')?.classList.add('hidden');
+    document.getElementById('how-to-play-modal')?.classList.add('hidden');
+    document.getElementById('result-modal')?.classList.add('hidden');
+}
+
 function navHome() {
+    closeAllPopups();
     if (getCurrentScreenId() === 'intro-screen') return;
     restartGame();
     updateNavButtonStates();
 }
 
 function navBack() {
+    closeAllPopups();
     switch (getCurrentScreenId()) {
         case 'category-screen': backToIntroScreen(); break;
         case 'subcategory-screen': backToCategoryScreen(); break;
@@ -1616,6 +1645,7 @@ function navBack() {
 }
 
 function navForward() {
+    closeAllPopups();
     switch (getCurrentScreenId()) {
         case 'intro-screen': showCategoryScreen(); break;
         case 'category-screen': forwardToSubcategoryScreen(); break;
@@ -1666,6 +1696,10 @@ function openHowToPlay(fromIntro) {
     const modal = document.getElementById('how-to-play-modal');
     if (modal) modal.classList.remove('hidden');
     document.getElementById('htp-gamestart-btn').style.display = htpFromIntro ? 'block' : 'none';
+    // 상단 네비 버튼으로 열었을 때는 이미 헤더의 × 버튼으로 닫을 수 있으니
+    // Game Start와 짝을 이루던 노란 '닫기' 버튼은 중복이라 숨기고, 버튼 줄 자체도 함께 숨긴다.
+    document.getElementById('htp-close-btn').style.display = htpFromIntro ? 'block' : 'none';
+    document.getElementById('htp-button-row').style.display = htpFromIntro ? 'flex' : 'none';
 }
 
 function closeHowToPlay() {
@@ -1678,6 +1712,17 @@ function startGameFromHowToPlay() {
     const modal = document.getElementById('how-to-play-modal');
     if (modal) modal.classList.add('hidden');
     showCategoryScreen();
+}
+
+// 힌트용 - 정답 단어의 순수 글자 수(공백·마침표 등 기호 제외)
+function countHintLetters(word) {
+    return (word || '').replace(/[^a-zA-Z]/g, '').length;
+}
+
+// 힌트용 - 정답 단어의 첫 알파벳(공백·마침표 등은 건너뛴 첫 글자)
+function firstHintLetter(word) {
+    const m = (word || '').match(/[a-zA-Z]/);
+    return m ? m[0].toUpperCase() : '';
 }
 
 // [추가] 힌트 팝업 열기/닫기 함수 (문제당 1회만 열람 가능)
@@ -1723,10 +1768,19 @@ function openHintPopup() {
             imgEl.classList.add('hidden');
         }
     } else {
-        // 그림 트랙: 기존처럼 텍스트 설명만
+        // 그림 트랙: 텍스트 힌트만 주는데, 매번 서술형 설명만 나오면 단조로우니
+        // 문제 순서에 따라 서술문/글자 수/시작 알파벳을 번갈아 보여준다.
         imgWrap.style.display = 'none';
         const hintText = document.getElementById('problem-hint');
-        hintTextEl.innerText = hintText ? hintText.innerText : '';
+        const descriptionHint = hintText ? hintText.innerText : '';
+        const hintMode = currentQuestionIdx % 3;
+        if (hintMode === 1 && q) {
+            hintTextEl.innerText = `정답은 총 ${countHintLetters(q.correct)}글자예요!`;
+        } else if (hintMode === 2 && q) {
+            hintTextEl.innerText = `정답은 '${firstHintLetter(q.correct)}'로 시작해요!`;
+        } else {
+            hintTextEl.innerText = descriptionHint;
+        }
     }
 
     const modal = document.getElementById('hint-modal');
@@ -1851,13 +1905,27 @@ function getWordAudioPath(q) {
     return `audio/${encodeURIComponent(q.major)}/${encodeURIComponent(fileBase)}.mp3`;
 }
 
+// 지금 재생 중인 단어 발음(녹음 파일)을 기억해뒀다가, 화면을 나갈 때 멈출 수 있게 한다.
+let currentWordAudio = null;
+
 // 녹음된 발음 파일을 재생하고, 파일이 없거나 재생에 실패하면 기기 TTS로 대체한다.
 function playWordAudio(q) {
+    stopWordAudio();
     const src = getWordAudioPath(q);
     if (!src) { speakWord(q.correct); return; }
     const audio = new Audio(src);
+    currentWordAudio = audio;
     audio.onerror = () => speakWord(q.correct);
     audio.play().catch(() => speakWord(q.correct));
+}
+
+// 녹음 파일 재생과 기기 TTS 재생을 둘 다 멈춘다 (나가기 버튼 등으로 화면을 벗어날 때 호출).
+function stopWordAudio() {
+    if (currentWordAudio) {
+        currentWordAudio.pause();
+        currentWordAudio = null;
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 }
 
 function buildChoiceOptions(q) {
@@ -2070,7 +2138,9 @@ function handleChoiceSelect(btnEl, selectedVal, correctVal) {
         btnEl.classList.add('ring-4', 'ring-emerald-400');
 
         const points = isOX ? OX_POINTS : POINTS_TABLE[Math.min(currentAttempts, POINTS_TABLE.length - 1)];
-        streak++;
+        // 연속 정답은 "직전 문제를 맞힌 상태에서, 이번 문제를 한 번만에" 맞혀야 이어진다.
+        // 오답을 거친 뒤 맞힌 경우는 정답이어도 스트릭을 끊는다.
+        streak = (currentAttempts === 0) ? streak + 1 : 0;
         correctCount++;
         const bonus = streak >= 2 ? 3 : 0;
         stars += points + bonus;
@@ -2157,6 +2227,7 @@ function showOutOfAttemptsPopup(correctVal) {
     if (!wrapper) return;
 
     const popup = document.createElement('div');
+    popup.id = 'out-of-attempts-popup';
     popup.className = 'gg-feedback-popup absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2 px-9 py-7 rounded-3xl font-extrabold text-white shadow-lg z-40';
     popup.style.background = '#ef5f7c';
     popup.style.border = '4px solid #ffffff';
@@ -2277,9 +2348,31 @@ function showResultModal(title) {
     if (resultModal) resultModal.classList.remove('hidden');
 }
 
+// ESC로 지금 열려 있는 팝업을 닫는다. 여러 개가 동시에 뜰 일은 거의 없지만,
+// 혹시 겹쳐 있으면 위에 있는 것부터 하나씩만 닫는다.
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+
+    const hintModal = document.getElementById('hint-modal');
+    if (hintModal && !hintModal.classList.contains('hidden')) { closeHintPopup(); return; }
+
+    const htpModal = document.getElementById('how-to-play-modal');
+    if (htpModal && !htpModal.classList.contains('hidden')) { closeHowToPlay(); return; }
+
+    const outOfAttemptsPopup = document.getElementById('out-of-attempts-popup');
+    if (outOfAttemptsPopup) { outOfAttemptsPopup.querySelector('button')?.click(); return; }
+
+    const resultModal = document.getElementById('result-modal');
+    if (resultModal && !resultModal.classList.contains('hidden')) { restartGame(); return; }
+});
+
+// 마우스 우클릭 시 브라우저 기본 메뉴(뒤로가기/검사 등)가 게임 위에 뜨지 않도록 막는다.
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+
 // 처음으로 버튼 함수
 function restartGame() {
     if (pendingAdvanceTimeout) { clearTimeout(pendingAdvanceTimeout); pendingAdvanceTimeout = null; }
+    stopWordAudio();
     clearStrayFeedbackPopups();
     document.getElementById('result-modal')?.classList.add('hidden');
     document.getElementById('hint-modal')?.classList.add('hidden');
@@ -2303,8 +2396,8 @@ selectDifficulty('중');
 const NAV_BAR_RESERVED = 30;
 
 function resizeGame() {
-  const wrapper = document.getElementById("game-wrapper");
-  if (!wrapper) return;
+  const stage = document.getElementById("app-stage");
+  if (!stage) return;
 
   // 현재 브라우저 창의 가로/세로 크기 (세로는 상단 바 높이만큼 뺀 값을 사용 가능 높이로 본다)
   const winW = window.innerWidth;
@@ -2319,7 +2412,7 @@ function resizeGame() {
   if (navLeft) navLeft.style.transform = `scale(${navScale})`;
   if (navRight) navRight.style.transform = `scale(${navScale})`;
 
-  // 위 CSS에서 설정한 #game-wrapper의 너비/높이와 똑같이 입력
+  // 위 CSS에서 설정한 #app-stage의 너비/높이와 똑같이 입력
   const designW = 1300;
   const designH = 800;
 
@@ -2331,36 +2424,10 @@ function resizeGame() {
   const scale = Math.min(scaleX, scaleY) * 0.92;
 
   // 화면 중앙에 고정시킨 뒤 통째로 이미지처럼 확대/축소 (CSS의 top:calc(50% + 45px)와 함께
-  // 상단 바 아래 남은 공간을 기준으로 중앙정렬됨)
-  wrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
-
-  const diffWrapper = document.getElementById("difficulty-wrapper");
-  if (diffWrapper) {
-    const diffScale = Math.min(winW / 1200, availH / 900) * 0.96;
-    diffWrapper.style.transform = `scale(${diffScale})`;
-  }
-
-  const introWrapper = document.getElementById("intro-wrapper");
-  if (introWrapper) {
-    const introScale = Math.min(winW / 1024, availH / 576) * 0.96;
-    introWrapper.style.transform = `scale(${introScale})`;
-  }
-
-  const categoryWrapper = document.getElementById("category-wrapper");
-  if (categoryWrapper) {
-    const categoryScale = Math.min(winW / 1200, availH / 900) * 0.96;
-    categoryWrapper.style.transform = `scale(${categoryScale})`;
-  }
-
-  const subcategoryWrapper = document.getElementById("subcategory-wrapper");
-  if (subcategoryWrapper) {
-    const subcategoryScale = Math.min(winW / 1200, availH / 900) * 0.96;
-    subcategoryWrapper.style.transform = `scale(${subcategoryScale})`;
-  }
-
-  // How to Play/힌트 팝업은 게임 화면 배율(scale)을 따라가지 않는다. 모바일처럼 화면이 아주
-  // 좁을 때 배율과 반응형 max-width가 이중으로 겹쳐 팝업이 지나치게 작아지고 글자가 억지로
-  // 줄바꿈되는 문제가 있었다. 대신 CSS max-width/max-height만으로 자체적으로 반응형 크기를 잡는다.
+  // 상단 바 아래 남은 공간을 기준으로 중앙정렬됨). 인트로/카테고리/소분류/난이도/게임
+  // 화면과 how-to-play/hint 팝업이 전부 #app-stage 안에 있으므로, 이 transform 하나로
+  // 전부 같은 비율로 커지고 작아진다 - 화면·팝업마다 따로 배율을 계산할 필요가 없다.
+  stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
 }
 
 // 창 크기가 변경될 때, 로드될 때 즉시 실행
