@@ -373,8 +373,8 @@ display: none;
         </div>
         <p class="wrap-indent" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:19px;color:#3b3a66;margin:0;line-height:1.6;">10문제를 모두 풀면 최종 점수가 나와요!</p>
         <div id="htp-button-row" style="display:flex;gap:12px;">
-            <button id="htp-close-btn" onclick="closeHowToPlay()" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:21px;color:#3b3a66;background:#ffdd8a;border:3px solid #181830;border-radius:16px;padding:14px 0;cursor:pointer;flex:1;">닫기</button>
-            <button id="htp-gamestart-btn" onclick="startGameFromHowToPlay()" style="display:none;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:21px;color:#7a3300;background:linear-gradient(180deg,#ffb15e 0%,#ff8a3d 100%);border:3px solid #181830;border-radius:16px;padding:14px 0;cursor:pointer;flex:1;">Game Start</button>
+            <button id="htp-close-btn" onclick="closeHowToPlay()" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:17px;color:#3b3a66;background:#ffdd8a;border:2.5px solid #181830;border-radius:14px;padding:10px 0;cursor:pointer;flex:1;box-shadow:0 5px 0 #d9a94a, 0 8px 14px rgba(0,0,0,0.15);transition:transform 0.1s ease, box-shadow 0.1s ease;" onmousedown="this.style.transform='translateY(4px)';this.style.boxShadow='0 1px 0 #d9a94a';" onmouseup="this.style.transform='';this.style.boxShadow='0 5px 0 #d9a94a, 0 8px 14px rgba(0,0,0,0.15)';" onmouseleave="this.style.transform='';this.style.boxShadow='0 5px 0 #d9a94a, 0 8px 14px rgba(0,0,0,0.15)';">닫기</button>
+            <button id="htp-gamestart-btn" onclick="startGameFromHowToPlay()" style="display:none;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:17px;color:#7a3300;background:linear-gradient(180deg,#ffb15e 0%,#ff8a3d 100%);border:2.5px solid #181830;border-radius:14px;padding:10px 0;cursor:pointer;flex:1;box-shadow:0 5px 0 #d9691f, 0 8px 16px rgba(0,0,0,0.25);transition:transform 0.1s ease, box-shadow 0.1s ease;" onmousedown="this.style.transform='translateY(4px)';this.style.boxShadow='0 1px 0 #d9691f';" onmouseup="this.style.transform='';this.style.boxShadow='0 5px 0 #d9691f, 0 8px 16px rgba(0,0,0,0.25)';" onmouseleave="this.style.transform='';this.style.boxShadow='0 5px 0 #d9691f, 0 8px 16px rgba(0,0,0,0.25)';">Game Start</button>
         </div>
     </div>
 </div>
@@ -403,9 +403,9 @@ display: none;
 
     <div style="position:absolute;left:0;right:0;bottom:0px;display:flex;flex-direction:column;align-items:center;gap:16px;padding:0 40px 20px;">
       <div style="display:flex;align-items:center;gap:14px;">
-        <button type="button" onclick="openHowToPlay(true)" onmouseover="this.style.background='rgba(15,25,50,0.65)'" onmouseout="this.style.background='rgba(15,25,50,0.5)'" style="display:flex;align-items:center;justify-content:center;width:170px;padding:12px 0;border-radius:999px;border:2px solid rgba(255,255,255,0.85);background:rgba(15,25,50,0.5);backdrop-filter:blur(6px);color:#ffffff;font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:17px;cursor:pointer;text-shadow:0 2px 6px rgba(0,0,0,0.45);box-shadow:0 5px 0 rgba(255,255,255,0.35), 0 8px 16px rgba(0,0,0,0.3);">How to Play</button>
+        <button type="button" onclick="openHowToPlay(true)" onmouseover="this.style.background='rgba(15,25,50,0.65)'" onmouseout="this.style.background='rgba(15,25,50,0.5)'" style="display:flex;align-items:center;justify-content:center;width:200px;padding:15px 0;border-radius:999px;border:2px solid rgba(255,255,255,0.85);background:rgba(15,25,50,0.5);backdrop-filter:blur(6px);color:#ffffff;font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:20px;cursor:pointer;text-shadow:0 2px 6px rgba(0,0,0,0.45);box-shadow:0 5px 0 rgba(255,255,255,0.35), 0 8px 16px rgba(0,0,0,0.3);">How to Play</button>
 
-        <button type="button" onclick="showCategoryScreen()" onmouseover="this.style.filter='brightness(1.05)'" onmouseout="this.style.filter=''" style="display:flex;align-items:center;justify-content:center;width:170px;padding:12px 0;border-radius:999px;border:none;background:linear-gradient(180deg,#ffb15e 0%,#ff8a3d 100%);color:#7a3300;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:17px;letter-spacing:0.5px;cursor:pointer;box-shadow:0 5px 0 #d9691f, 0 8px 16px rgba(0,0,0,0.25);">Game Start</button>
+        <button type="button" onclick="showCategoryScreen()" onmouseover="this.style.filter='brightness(1.05)'" onmouseout="this.style.filter=''" style="display:flex;align-items:center;justify-content:center;width:200px;padding:15px 0;border-radius:999px;border:none;background:linear-gradient(180deg,#ffb15e 0%,#ff8a3d 100%);color:#7a3300;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:20px;letter-spacing:0.5px;cursor:pointer;box-shadow:0 5px 0 #d9691f, 0 8px 16px rgba(0,0,0,0.25);">Game Start</button>
       </div>
     </div>
   </div>
@@ -1883,14 +1883,15 @@ if ('speechSynthesis' in window) {
     window.speechSynthesis.addEventListener('voiceschanged', pickEnglishVoice);
 }
 
-function speakWord(word) {
-    if (!('speechSynthesis' in window)) return;
+function speakWord(word, onEnd) {
+    if (!('speechSynthesis' in window)) { if (onEnd) onEnd(); return; }
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(word);
     utter.lang = 'en-US';
     utter.rate = 0.85;
     const voice = cachedEnglishVoice || pickEnglishVoice();
     if (voice) utter.voice = voice;
+    if (onEnd) { utter.onend = onEnd; utter.onerror = onEnd; }
     window.speechSynthesis.speak(utter);
 }
 
@@ -1906,14 +1907,22 @@ function getWordAudioPath(q) {
 let currentWordAudio = null;
 
 // 녹음된 발음 파일을 재생하고, 파일이 없거나 재생에 실패하면 기기 TTS로 대체한다.
+// 발음이 나오는 동안에는 배경음악과 겹치지 않도록 잠시 멈췄다가, 발음이 끝나면 다시 재생한다.
 function playWordAudio(q) {
     stopWordAudio();
+
+    const bgmAudio = bgmTracks[currentBgmKey];
+    const wasBgmPlaying = !!(bgmAudio && !bgmAudio.paused);
+    if (wasBgmPlaying) bgmAudio.pause();
+    const resumeBgm = () => { if (wasBgmPlaying && !musicMuted) tryPlayCurrentBgm(); };
+
     const src = getWordAudioPath(q);
-    if (!src) { speakWord(q.correct); return; }
+    if (!src) { speakWord(q.correct, resumeBgm); return; }
     const audio = new Audio(src);
     currentWordAudio = audio;
-    audio.onerror = () => speakWord(q.correct);
-    audio.play().catch(() => speakWord(q.correct));
+    audio.onended = resumeBgm;
+    audio.onerror = () => speakWord(q.correct, resumeBgm);
+    audio.play().catch(() => speakWord(q.correct, resumeBgm));
 }
 
 // 녹음 파일 재생과 기기 TTS 재생을 둘 다 멈춘다 (나가기 버튼 등으로 화면을 벗어날 때 호출).
