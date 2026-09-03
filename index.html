@@ -382,6 +382,74 @@ display: none;
 })();
 </script>
 
+<!-- [추가] 이모지를 대체하는 아이콘 그림(speaker.png 등)은 흰 사각형 배경이 그대로 찍혀 있어,
+     들어가는 버튼/카드 배경색이 흰색이 아니면 도드라져 보인다. 가장자리(네 변)부터 흰색
+     영역을 채우기 방식(flood fill)으로 찾아 투명화하고, 배경과 맞닿은 경계는 알파를 서서히
+     낮춰 계단현상 없이 부드럽게 만든다. 이렇게 하면 아이콘이 어떤 배경 위에 있든 그 배경
+     색이 그대로 비쳐 보여 "배경이 버튼/페이지와 동일해" 보이는 효과를 낸다. -->
+<script>
+window.removeWhiteBackground = function (imgEl, opts) {
+    if (!imgEl) return;
+    opts = opts || {};
+    var hardTol = opts.hardTol == null ? 12 : opts.hardTol;
+    var softTol = opts.softTol == null ? 60 : opts.softTol;
+    function apply() {
+        try {
+            var w = imgEl.naturalWidth, h = imgEl.naturalHeight;
+            if (!w || !h) return;
+            var canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(imgEl, 0, 0);
+            var imageData = ctx.getImageData(0, 0, w, h);
+            var data = imageData.data;
+            var n = w * h;
+            function whiteness(i) {
+                return Math.min(data[i * 4], data[i * 4 + 1], data[i * 4 + 2]);
+            }
+            var bg = new Uint8Array(n);
+            var visited = new Uint8Array(n);
+            var stack = [];
+            for (var x = 0; x < w; x++) { stack.push(x); stack.push((h - 1) * w + x); }
+            for (var y = 0; y < h; y++) { stack.push(y * w); stack.push(y * w + w - 1); }
+            while (stack.length) {
+                var i = stack.pop();
+                if (visited[i]) continue;
+                visited[i] = 1;
+                if (whiteness(i) < 255 - hardTol) continue;
+                bg[i] = 1;
+                data[i * 4 + 3] = 0;
+                var px = i % w, py = (i / w) | 0;
+                if (px > 0) stack.push(i - 1);
+                if (px < w - 1) stack.push(i + 1);
+                if (py > 0) stack.push(i - w);
+                if (py < h - 1) stack.push(i + w);
+            }
+            // 지워진 배경과 맞닿은, 아직 안 지워진 흰색에 가까운 픽셀은 알파를 서서히
+            // 낮춰서 경계가 계단처럼 딱 잘리지 않고 부드럽게 이어지도록 한다.
+            for (var y2 = 0; y2 < h; y2++) {
+                for (var x2 = 0; x2 < w; x2++) {
+                    var i2 = y2 * w + x2;
+                    if (bg[i2]) continue;
+                    var wn = whiteness(i2);
+                    if (wn < 255 - softTol) continue;
+                    var touchesBg =
+                        (x2 > 0 && bg[i2 - 1]) || (x2 < w - 1 && bg[i2 + 1]) ||
+                        (y2 > 0 && bg[i2 - w]) || (y2 < h - 1 && bg[i2 + w]);
+                    if (!touchesBg) continue;
+                    var t = (wn - (255 - softTol)) / softTol;
+                    data[i2 * 4 + 3] = Math.round(data[i2 * 4 + 3] * (1 - t));
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+            imgEl.src = canvas.toDataURL('image/png');
+        } catch (e) { /* 캔버스 작업이 막히면 원본 그림을 그대로 둔다 */ }
+    }
+    if (imgEl.complete && imgEl.naturalWidth) apply();
+    else imgEl.addEventListener('load', apply, { once: true });
+};
+</script>
+
 <!-- [배경음악] 인트로/주제선택/난이도선택용, 실제 게임화면용 두 트랙 -->
 <audio id="bgm-intro" src="fluxsound-cheerful-upbeat-kids-486631.mp3" loop preload="none"></audio>
 <audio id="bgm-game" src="dreamy_rabbit-8-bit-game-music-122259.mp3" loop preload="none"></audio>
@@ -2257,9 +2325,10 @@ function renderListenControls(q, container) {
     listenBtn.id = 'listen-play-btn';
     listenBtn.type = 'button';
     listenBtn.style.cssText = "font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:1.4rem;color:#3b3a66;background:#ffdd8a;border:4px solid #181830;border-radius:9999px;padding:20px 32px;cursor:pointer;display:flex;align-items:center;gap:10px;";
-    listenBtn.innerHTML = '🔊 발음 듣기';
+    listenBtn.innerHTML = '<img src="speaker.png" alt="" style="width:32px;height:32px;object-fit:contain;"> 발음 듣기';
     listenBtn.onclick = () => playWordAudio(q);
     container.appendChild(listenBtn);
+    removeWhiteBackground(listenBtn.querySelector('img')); // speaker.png의 흰 배경을 지워 버튼 색과 자연스럽게 어울리게 함
     playWordAudio(q); // 문제 등장 시 자동 1회 재생
 }
 
