@@ -401,7 +401,7 @@ display: none;
 <div id="exit-confirm-modal" class="hidden fixed inset-0 flex items-center justify-center p-6" style="background:rgba(0,0,0,0.55);z-index:80;" onclick="closeExitConfirm()">
     <div class="relative" style="width:420px;background:#ffffff;border:4px solid #181830;border-radius:24px;box-shadow:0 12px 0 rgba(24,24,48,0.15);box-sizing:border-box;padding:30px 30px 26px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;" onclick="event.stopPropagation()">
         <h2 style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:22px;color:#3b3a66;margin:0;">게임을 종료할까요?</h2>
-        <img src="q.png" alt="" style="width:100px;height:auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,0.15));">
+        <img src="q.png" alt="" style="width:140px;height:auto;">
         <p style="font-family:'KERISKEDU',sans-serif;font-weight:700;font-size:16px;color:#5c5a85;margin:0;">지금 나가면 풀던 문제가 사라져요.</p>
         <div style="display:flex;gap:12px;width:100%;margin-top:6px;">
             <button onclick="confirmExitProceed()" style="flex:1;font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:17px;color:#fff;background:#8a8aa0;border:2.5px solid #181830;border-radius:14px;padding:10px 0;cursor:pointer;">나가기</button>
@@ -1741,6 +1741,43 @@ function firstHintLetter(word) {
     return m ? m[0].toUpperCase() : '';
 }
 
+/* ================= 그림 상자 배경 자동 맞춤 =================
+   단어 그림 중 일부(bear.png 등)는 배경 없이 캐릭터만 투명하게 떠 있고,
+   일부(beach.png, sky.png 등)는 자체적으로 배경이 통째로 칠해져 있다.
+   전자를 크림색 그림 상자 위에 그대로 두면 상자 테두리가 도드라져 보이므로,
+   그림 네 모서리와 상하좌우 가장자리를 캔버스로 샘플링해 전부 투명하면
+   상자 배경을 카드와 같은 흰색으로 바꿔 그림(요소)만 남은 것처럼 보이게 한다. */
+const PICTURE_BOX_DEFAULT_BG = 'linear-gradient(145deg,#fffef9 0%,#fff2cc 100%)';
+const PICTURE_BOX_BLEND_BG = '#ffffff'; // 그림 상자를 감싸는 흰 카드와 동일한 색
+
+function imageHasNoBakedBackground(imgEl) {
+    try {
+        const w = imgEl.naturalWidth, h = imgEl.naturalHeight;
+        if (!w || !h) return false;
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(imgEl, 0, 0);
+        const samplePoints = [
+            [0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1],
+            [Math.floor(w / 2), 0], [Math.floor(w / 2), h - 1],
+            [0, Math.floor(h / 2)], [w - 1, Math.floor(h / 2)]
+        ];
+        return samplePoints.every(([x, y]) => ctx.getImageData(x, y, 1, 1).data[3] < 20);
+    } catch (e) {
+        return false; // 검사할 수 없으면(예: 캔버스 제약) 기존 크림색 상자를 그대로 둔다
+    }
+}
+
+function updatePictureBoxBackground(boxEl, imgEl) {
+    if (!boxEl || !imgEl) return;
+    const apply = () => {
+        boxEl.style.background = imageHasNoBakedBackground(imgEl) ? PICTURE_BOX_BLEND_BG : PICTURE_BOX_DEFAULT_BG;
+    };
+    if (imgEl.complete && imgEl.naturalWidth) apply();
+    else imgEl.addEventListener('load', apply, { once: true });
+}
+
 // [추가] 힌트 팝업 열기/닫기 함수 (문제당 1회만 열람 가능)
 function openHintPopup() {
     if (hintUsed) return;
@@ -1770,6 +1807,7 @@ function openHintPopup() {
         if (q.img) {
             imgEl.onerror = () => {
                 imgEl.classList.add('hidden');
+                imgWrap.style.background = PICTURE_BOX_DEFAULT_BG;
                 if (q.emoji) {
                     emojiEl.innerText = q.emoji;
                     emojiEl.classList.remove('hidden');
@@ -1778,10 +1816,12 @@ function openHintPopup() {
             imgEl.src = q.img;
             imgEl.classList.remove('hidden');
             emojiEl.classList.add('hidden');
+            updatePictureBoxBackground(imgWrap, imgEl);
         } else if (q.emoji) {
             emojiEl.innerText = q.emoji;
             emojiEl.classList.remove('hidden');
             imgEl.classList.add('hidden');
+            imgWrap.style.background = PICTURE_BOX_DEFAULT_BG;
         }
     } else {
         // 그림 트랙: 텍스트 힌트만 주는데, 매번 서술형 설명만 나오면 단조로우니
@@ -2026,6 +2066,7 @@ function loadQuestion(idx) {
             imgEl.onerror = () => {
                 // 이미지 파일이 아직 없으면 이모지로 대체 표시
                 imgEl.classList.add('hidden');
+                pictureBox.style.background = PICTURE_BOX_DEFAULT_BG;
                 if (q.emoji) {
                     emojiEl.innerText = q.emoji;
                     emojiEl.classList.remove('hidden');
@@ -2034,9 +2075,11 @@ function loadQuestion(idx) {
             imgEl.src = q.img;
             imgEl.classList.remove('hidden');
             emojiEl.classList.add('hidden');
+            updatePictureBoxBackground(pictureBox, imgEl);
         } else if (q.emoji) {
             emojiEl.innerText = q.emoji;
             emojiEl.classList.remove('hidden');
+            pictureBox.style.background = PICTURE_BOX_DEFAULT_BG;
             imgEl.classList.add('hidden');
         }
     }
@@ -2245,6 +2288,9 @@ function clearStrayFeedbackPopups() {
 function showOutOfAttemptsPopup(correctVal) {
     const wrapper = document.getElementById('game-wrapper');
     if (!wrapper) return;
+
+    // 직전 오답 클릭으로 뜬 피드백 팝업이 아직 안 사라졌을 수 있으므로, 겹치지 않게 먼저 정리한다.
+    clearStrayFeedbackPopups();
 
     const popup = document.createElement('div');
     popup.id = 'out-of-attempts-popup';
