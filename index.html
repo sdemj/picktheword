@@ -663,7 +663,14 @@ window.removeWhiteBackground = function (imgEl, opts) {
 <div class="w-full relative" style="max-width:1260px;flex-shrink:0;background:#ffffff;border:4px solid #181830;border-radius:28px;overflow:hidden;box-shadow:0 12px 0 rgba(24,24,48,0.15);display:flex;flex-direction:column;">
 
     <div style="background:#dbd1e9;border-bottom:4px solid #181830;padding:24px 34px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-        <div style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:26px;color:#3b3a66;background:rgba(255,255,255,0.6);border:3px solid #181830;border-radius:14px;padding:9px 20px;">Score: <span id="star-count">0</span></div>
+        <div style="display:flex;align-items:center;gap:14px;">
+            <div style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:26px;color:#3b3a66;background:rgba(255,255,255,0.6);border:3px solid #181830;border-radius:14px;padding:9px 20px;">Score: <span id="star-count">0</span></div>
+            <!-- [추가] 연속 정답 배지: 사진 원본을 그대로 쓰고, 숫자만 그 위에 겹쳐 표시한다 -->
+            <div id="streak-badge" style="display:none;position:relative;flex-shrink:0;">
+                <img src="streak-badge.png" alt="연속 정답 보너스" style="width:250px;height:auto;display:block;">
+                <span id="streak-badge-num" style="position:absolute;left:36.1%;top:52%;transform:translate(-50%,-50%);font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:38px;color:#ffffff;-webkit-text-stroke:5px #e8600c;paint-order:stroke fill;line-height:1;"></span>
+            </div>
+        </div>
         <div style="display:flex;gap:12px;">
             <button id="hint-btn" onclick="openHintPopup()" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:22px;color:#3b3a66;background:#ffdd8a;border:3px solid #181830;border-radius:14px;padding:10px 22px;cursor:pointer;">Hint</button>
         </div>
@@ -2442,6 +2449,7 @@ function clearStrayFeedbackPopups() {
     feedbackPopupFadeTimeouts.forEach(id => clearTimeout(id));
     feedbackPopupFadeTimeouts = [];
     document.querySelectorAll('#game-wrapper .gg-feedback-popup').forEach(el => el.remove());
+    hideStreakBadge();
 }
 
 // 5번의 기회를 모두 소진했을 때 뜨는 팝업. 정답을 보여준 뒤 플레이어가
@@ -2488,12 +2496,19 @@ function showFeedbackPopup(isCorrect, correctWord, streakBonus) {
     // 새로 띄우기 전에 남아있는 팝업과 그 예약된 타임아웃부터 정리한다.
     clearStrayFeedbackPopups();
 
+    // 연속 보너스가 있으면 스코어 옆 배지(streak-badge)를 정답 팝업과 같은 타이밍에 함께
+    // 띄웠다 같이 지운다. 배지 자체는 항상 화면에 존재하는 헤더 요소라 여기서는 숫자만
+    // 채우고 보이기/숨기기만 담당한다.
+    showStreakBadge(isCorrect && streakBonus > 0 ? correctStreak : 0);
+
+    const container = document.createElement('div');
+    container.className = 'gg-feedback-popup absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3 z-40 transition-all duration-300 pointer-events-none';
+
     const popup = document.createElement('div');
-    // fixed 대신 absolute를 사용하여 wrapper 안쪽 정중앙에 위치시킵니다.
-    popup.className = 'gg-feedback-popup absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center gap-4 pl-3.5 pr-10 py-4 rounded-full font-extrabold text-2xl md:text-3xl text-white shadow-lg z-40 transition-all duration-300 pointer-events-none';
     // left:50%+translateX(-50%)로 중앙정렬된 절대위치 요소는 너비를 자동 계산할 때
     // 컨테이너의 절반만 "사용 가능한 공간"으로 잘못 인식해 긴 정답 텍스트가 실제보다 일찍 줄바꿈된다.
     // width:max-content로 내용 기준 너비를 명시해 이 문제를 막는다.
+    popup.className = 'flex items-center gap-4 pl-3.5 pr-10 py-4 rounded-full font-extrabold text-2xl md:text-3xl text-white shadow-lg';
     popup.style.width = 'max-content';
     popup.style.maxWidth = 'min(92%, 1150px)';
 
@@ -2507,7 +2522,6 @@ function showFeedbackPopup(isCorrect, correctWord, streakBonus) {
             <span style="display:flex;flex-direction:column;align-items:center;text-align:center;line-height:1.3;">
                 <span>정답!</span>
                 <span style="font-size:1.7em;white-space:nowrap;">${correctWord || ''}</span>
-                ${streakBonus > 0 ? `<span style="font-size:0.6em;white-space:nowrap;">🔥 연속 보너스 +${streakBonus}</span>` : ''}
             </span>
         `;
     } else {
@@ -2521,14 +2535,30 @@ function showFeedbackPopup(isCorrect, correctWord, streakBonus) {
         `;
     }
 
-    wrapper.appendChild(popup); // document.body 대신 wrapper에 추가
+    container.appendChild(popup);
+    wrapper.appendChild(container); // document.body 대신 wrapper에 추가
 
     const fadeTimeout = setTimeout(() => {
-        popup.style.opacity = '0';
-        const removeTimeout = setTimeout(() => popup.remove(), 300);
+        container.style.opacity = '0';
+        hideStreakBadge();
+        const removeTimeout = setTimeout(() => container.remove(), 300);
         feedbackPopupFadeTimeouts.push(removeTimeout);
     }, 2000);
     feedbackPopupFadeTimeouts.push(fadeTimeout);
+}
+
+// 스코어 옆 연속 정답 배지. streak가 0이면 숨기고, 아니면 사진 위에 겹쳐진 숫자만 바꿔서 보여준다.
+function showStreakBadge(streak) {
+    const badge = document.getElementById('streak-badge');
+    const numEl = document.getElementById('streak-badge-num');
+    if (!badge || !numEl) return;
+    if (!streak) { badge.style.display = 'none'; return; }
+    numEl.textContent = streak;
+    badge.style.display = 'block';
+}
+function hideStreakBadge() {
+    const badge = document.getElementById('streak-badge');
+    if (badge) badge.style.display = 'none';
 }
 
 function resetGameState() {
