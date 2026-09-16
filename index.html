@@ -2554,6 +2554,9 @@ function showStreakBadge(streak) {
     if (!badge || !numEl) return;
     if (!streak) { badge.style.display = 'none'; return; }
     numEl.textContent = streak;
+    // [수정] 연속 정답이 두 자리 수(10문제 만점 시 "10")가 되면 숫자 폭이 넓어져
+    // 오른쪽의 "연속 정답!" 글자와 맞닿아 보이므로, 자릿수에 맞춰 글자 크기를 살짝 줄인다.
+    numEl.style.fontSize = String(streak).length >= 2 ? '28px' : '38px';
     badge.style.display = 'block';
 }
 function hideStreakBadge() {
