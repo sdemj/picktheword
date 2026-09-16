@@ -2513,6 +2513,10 @@ function showFeedbackPopup(isCorrect, correctWord, streakBonus) {
     popup.className = 'flex items-center gap-4 pl-3.5 pr-10 py-4 rounded-full font-extrabold text-2xl md:text-3xl text-white shadow-lg';
     popup.style.width = 'max-content';
     popup.style.maxWidth = 'min(92%, 1150px)';
+    // [추가] 정답 단어가 짧으면(one, sit, ten 등) "정답!" 글자 폭과 칸 폭이 거의 같아져
+    // 여유가 0px에 가까워지고, 렌더링 환경에 따라 줄바꿈으로 넘어갈 수 있었다(위쪽
+    // white-space:nowrap 수정과 별개로, 기본 폭 자체를 넓혀서 이중으로 안전하게 막는다).
+    popup.style.minWidth = '260px';
 
     if (isCorrect) {
         popup.style.background = '#3ecf9a';
