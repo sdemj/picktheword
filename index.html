@@ -663,10 +663,12 @@ window.removeWhiteBackground = function (imgEl, opts) {
 <div class="w-full relative" style="max-width:1260px;flex-shrink:0;background:#ffffff;border:4px solid #181830;border-radius:28px;overflow:hidden;box-shadow:0 12px 0 rgba(24,24,48,0.15);display:flex;flex-direction:column;">
 
     <div style="background:#dbd1e9;border-bottom:4px solid #181830;padding:24px 34px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:14px;">
+        <div style="position:relative;display:flex;align-items:center;gap:14px;">
             <div style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:26px;color:#3b3a66;background:rgba(255,255,255,0.6);border:3px solid #181830;border-radius:14px;padding:9px 20px;">Score: <span id="star-count">0</span></div>
-            <!-- [추가] 연속 정답 배지: 사진 원본을 그대로 쓰고, 숫자만 그 위에 겹쳐 표시한다 -->
-            <div id="streak-badge" style="display:none;position:relative;flex-shrink:0;">
+            <!-- [수정] 연속 정답 배지가 fla flex 흐름에 끼어있으면 뜰 때마다 Score 배지보다 키가 커서
+                 헤더(보라색 바) 전체 높이가 늘어났다 줄어들었다 했다. position:absolute로 흐름에서
+                 빼서 떠 있게 만들어, 배지가 뜨고 지는 것과 상관없이 헤더 크기가 항상 고정되게 한다. -->
+            <div id="streak-badge" style="display:none;position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:14px;flex-shrink:0;pointer-events:none;">
                 <img src="streak-badge.png" alt="연속 정답 보너스" style="width:250px;height:auto;display:block;">
                 <span id="streak-badge-num" style="position:absolute;left:36.1%;top:52%;transform:translate(-50%,-50%);font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:38px;color:#ffffff;-webkit-text-stroke:5px #e8600c;paint-order:stroke fill;line-height:1;"></span>
             </div>
