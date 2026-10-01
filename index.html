@@ -535,7 +535,8 @@ window.removeWhiteBackground = function (imgEl, opts) {
                 <span id="hint-popup-emoji" class="hidden" style="font-size:6.5rem;line-height:1;"></span>
             </div>
             <div style="background:#fff8dc;border:4px solid #181830;border-radius:18px;padding:26px 28px;">
-                <p id="hint-popup-text" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:23px;color:#3b3a66;line-height:1.6;margin:0;text-align:center;"></p>
+                <!-- word-break:keep-all - 한글도 글자 단위가 아니라 띄어쓰기(단어) 단위로 줄을 바꾼다 (글씨/를 처럼 끊기지 않게) -->
+                <p id="hint-popup-text" style="font-family:'KERISKEDU',sans-serif;font-weight:800;font-size:23px;color:#3b3a66;line-height:1.6;margin:0;text-align:center;word-break:keep-all;overflow-wrap:break-word;"></p>
             </div>
         </div>
     </div>
@@ -2542,41 +2543,49 @@ function showFeedbackPopup(isCorrect, correctWord, streakBonus) {
     // 채우고 보이기/숨기기만 담당한다.
     showStreakBadge(isCorrect && streakBonus > 0 ? correctStreak : 0);
 
+    // [수정] 컨테이너를 게임 화면 폭 전체로 펼친다. 예전처럼 left:50%+translateX(-50%)로 두면
+    // 컨테이너가 화면 절반 폭으로 계산되어, 긴 정답(police station 등)이 팝업 오른쪽 끝에서 잘렸다.
     const container = document.createElement('div');
-    container.className = 'gg-feedback-popup absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-3 z-40 transition-all duration-300 pointer-events-none';
+    container.className = 'gg-feedback-popup absolute top-1/2 transform -translate-y-1/2 flex flex-col items-center gap-3 z-40 transition-all duration-300 pointer-events-none';
+    container.style.left = '0';
+    container.style.right = '0';
 
     const popup = document.createElement('div');
-    // left:50%+translateX(-50%)로 중앙정렬된 절대위치 요소는 너비를 자동 계산할 때
-    // 컨테이너의 절반만 "사용 가능한 공간"으로 잘못 인식해 긴 정답 텍스트가 실제보다 일찍 줄바꿈된다.
-    // width:max-content로 내용 기준 너비를 명시해 이 문제를 막는다.
-    popup.className = 'flex items-center gap-4 pl-3.5 pr-10 py-4 rounded-full font-extrabold text-2xl md:text-3xl text-white shadow-lg';
+    // [수정] 체크/엑스 아이콘을 왼쪽에 겹쳐 놓고(absolute) 좌우 여백을 똑같이 두어, "정답!"과 정답 단어가
+    // 글자 수와 관계없이 항상 팝업 정가운데에 오게 한다 (예전에는 아이콘 자리만큼 왼쪽/오른쪽으로 치우쳐 보였다).
+    popup.className = 'relative flex items-center justify-center py-4 rounded-full font-extrabold text-2xl md:text-3xl text-white shadow-lg';
+    popup.style.paddingLeft = popup.style.paddingRight = '72px';
     popup.style.width = 'max-content';
     popup.style.maxWidth = 'min(92%, 1150px)';
-    // [추가] 정답 단어가 짧으면(one, sit, ten 등) "정답!" 글자 폭과 칸 폭이 거의 같아져
-    // 여유가 0px에 가까워지고, 렌더링 환경에 따라 줄바꿈으로 넘어갈 수 있었다(위쪽
-    // white-space:nowrap 수정과 별개로, 기본 폭 자체를 넓혀서 이중으로 안전하게 막는다).
-    popup.style.minWidth = '260px';
+    popup.style.minWidth = '300px';
+    popup.style.boxSizing = 'border-box';
+    popup.style.textAlign = 'center';
+
+    // 아이콘: 팝업 왼쪽 안쪽에 세로 가운데로 고정
+    const iconStyle = 'position:absolute;left:16px;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:9999px;background:#ffffff;display:flex;align-items:center;justify-content:center;';
+    // 매우 긴 정답이 팝업 최대 폭을 넘으면 띄어쓰기에서만 줄을 바꾼다 (단어 중간에서는 끊지 않는다)
+    const textStyle = 'display:block;text-align:center;word-break:keep-all;overflow-wrap:normal;';
 
     if (isCorrect) {
         popup.style.background = '#3ecf9a';
         popup.style.border = '4px solid #ffffff';
         popup.innerHTML = `
-            <span style="width:42px;height:42px;border-radius:9999px;background:#ffffff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="${iconStyle}">
                 <i class="fa-solid fa-check" style="color:#3ecf9a;font-size:20px;"></i>
             </span>
             <span style="display:flex;flex-direction:column;align-items:center;text-align:center;line-height:1.3;">
-                <span style="white-space:nowrap;">정답!</span>
-                <span style="font-size:1.7em;white-space:nowrap;">${correctWord || ''}</span>
+                <span style="${textStyle}white-space:nowrap;">정답!</span>
+                <span style="${textStyle}font-size:1.7em;">${correctWord || ''}</span>
             </span>
         `;
     } else {
         popup.style.background = '#ef5f7c';
         popup.style.border = '4px solid #ffffff';
         popup.innerHTML = `
-            <span style="width:42px;height:42px;border-radius:9999px;background:#ffffff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <span style="${iconStyle}">
                 <i class="fa-solid fa-xmark" style="color:#ef5f7c;font-size:20px;"></i>
             </span>
-            <span style="white-space:nowrap;">다시 도전해보세요!</span>
+            <span style="${textStyle}white-space:nowrap;">다시 도전해보세요!</span>
         `;
     }
 
