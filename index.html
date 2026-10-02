@@ -1529,6 +1529,19 @@ const categoryData = {
     '특징과 감정': { en: 'Character & Feeling', emoji: '😊', subs: ['Look', 'Character', 'Feeling'] }
 };
 
+// 소분류 영문 키 → 한글 명칭
+const subcategoryKo = {
+    'Number': '숫자', 'Color': '색깔', 'Time & Date': '시간과 날짜',
+    'Body': '몸', 'Family & People': '가족과 사람', 'Animal': '동물',
+    'Sports & Hobby': '운동과 취미', 'Subject & Class': '과목과 수업', 'Job': '직업',
+    'Fruit & Vegetable': '과일과 채소', 'Meal & Snack': '식사와 간식', 'Drink & Taste': '음료와 맛',
+    'Country': '나라', 'Nature': '자연', 'Weather': '날씨',
+    'Place': '장소', 'Transportation': '교통수단', 'Direction & Position': '방향과 위치',
+    'School Supplies': '학용품', 'Household': '생활용품', 'Clothing': '옷',
+    'Daily Action': '일상 동작', 'Move & Play': '움직임과 놀이', 'Talk & Feel': '말과 감정',
+    'Look': '생김새', 'Character': '성격', 'Feeling': '기분'
+};
+
 let activeQuestions = [];
 
 function shuffleArray(arr) {
@@ -1650,7 +1663,8 @@ function renderSubcategoryGrid() {
         box.setAttribute('aria-label', `${sub}: ${subWords.length > 0 ? subWords.join(', ') : '아직 등록된 단어가 없어요'}`);
         applyPopBoxStyle(box, subcategoryTheme, false);
         box.innerHTML = `
-            <span style="font-family:'KERISKEDU',sans-serif;font-size:1.9rem;">${sub}</span>
+            <span style="font-family:'KERISKEDU',sans-serif;font-size:1.9rem;">${subcategoryKo[sub] || sub}</span>
+            <span style="font-family:'KERISKEDU',sans-serif;font-weight:600;font-size:1.1rem;opacity:0.75;">${sub}</span>
             <span style="font-family:'KERISKEDU',sans-serif;font-weight:600;font-size:1.1rem;opacity:0.75;">(${subWords.length}개)</span>
             <span class="sub-tooltip">${subWords.length > 0 ? subWords.join(', ') : '아직 등록된 단어가 없어요'}</span>
         `;
