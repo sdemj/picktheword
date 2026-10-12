@@ -1932,10 +1932,10 @@ function countHintLetters(word) {
     return (word || '').replace(/[^a-zA-Z]/g, '').length;
 }
 
-// 힌트용 - 정답 단어의 첫 알파벳(공백·마침표 등은 건너뛴 첫 글자)
+// 힌트용 - 정답 단어의 첫 알파벳(공백·마침표 등은 건너뛴 첫 글자, 단어 속 대소문자 그대로)
 function firstHintLetter(word) {
     const m = (word || '').match(/[a-zA-Z]/);
-    return m ? m[0].toUpperCase() : '';
+    return m ? m[0] : '';
 }
 
 /* ================= 그림 상자 배경 자동 맞춤 =================
