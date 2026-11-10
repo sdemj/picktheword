@@ -2222,10 +2222,11 @@ function speakWord(word, onEnd) {
 
 // audio/<대분류 폴더명>/<단어>.mp3 형태로 녹음된 발음 파일 경로를 만든다.
 // 'the U.S.'/'the U.K.'/'P.E.'처럼 단어 끝에 마침표가 있는 경우 파일명에는 마침표가 빠져 있다.
+const TOPIC_DIR={'국가와 자연':'country_nature','동작':'action','물건':'things','사람과 동물':'people_animals','숫자·색깔·시간':'number_color_time','음식과 음료':'food_drink','장소·교통·방향':'place_transport_direction','취미·과목·직업':'hobby_subject_job','특징과 감정':'feature_feeling'};   // CMS가 한글 경로를 못 읽어 녹음 폴더 이름을 영문으로 바꿨다 (미래엔 이름 대조표)
 function getWordAudioPath(q) {
     if (!q || !q.major || !q.correct) return null;
     const fileBase = q.correct.replace(/\.$/, '');
-    return `audio/${encodeURIComponent(q.major)}/${encodeURIComponent(fileBase)}.mp3`;
+    return `audio/${TOPIC_DIR[q.major] || encodeURIComponent(q.major)}/${encodeURIComponent(fileBase)}.mp3`;
 }
 
 // 지금 재생 중인 단어 발음(녹음 파일)을 기억해뒀다가, 화면을 나갈 때 멈출 수 있게 한다.
